@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:inspec_xtra/FORMS/Ext.dart';
 import 'package:inspec_xtra/FORMS/HB.dart';
-import 'package:inspec_xtra/FORMS/HR.dart';
+import 'package:inspec_xtra/adminforms/EXt.dart';
+import 'package:inspec_xtra/adminforms/HB.dart';
 import 'package:inspec_xtra/logic/database/mysql.dart';
 
-class ViewData extends StatefulWidget {
+// ignore: camel_case_types
+class adminview extends StatefulWidget {
   @override
-  _ViewDataState createState() => _ViewDataState();
+  _adminviewState createState() => _adminviewState();
 }
 
+// ignore: camel_case_types
+class _adminviewState extends State<adminview> {
+  //ALTER TABLE `tbl_hosebox` ADD COLUMN `TYPEOFMACHINE` VARCHAR(50) NOT NULL AFTER `HBId`;
+  //ALTER TABLE `tbl_eyewasher` ADD COLUMN `TYPEOFMACHINE` VARCHAR(50) NOT NULL DEFAULT 'eyewasher' AFTER `WasherId`;
 
-class _ViewDataState extends State<ViewData> {
   var db= new MySQL();
   List data=[];
 
   void getconnection(){
-    var q=["`incidentreport`.`tbl_fireextinguisher`","`incidentreport`.`tbl_hosebox`", "`incidentreport`.`tbl_hosereel`"];
+    var q=["`incidentreport`.`tbl_hosebox`", "`incidentreport`.`tbl_fireextinguisher`"];
     db.getConnection().then((conn){
       for(int i=0;i<q.length;i++){
         String sql="select * from ${q[i]}";
@@ -34,31 +39,69 @@ class _ViewDataState extends State<ViewData> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getconnection();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Visual Inspection"),centerTitle: true,),
-      body: data.isEmpty ? CircularProgressIndicator() :
-          ListView.builder(
-            itemCount: data.length,
-            itemBuilder: (context,index){
-              return setview(data[index]);
-            },
-          )
-    );
+      appBar: AppBar(title: Text("ADMIN"),centerTitle: true,),
+      body: Container(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              GestureDetector(
+                  onTap: (){
+                    //todo
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=> ADDEXT()));
+                  },
+                  child: Container(
+                      width: MediaQuery.of(context).size.width*0.7,
+                      height: MediaQuery.of(context).size.height*0.1,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        color: Colors.blueAccent,
+                      ),
+                      child: Center(child: Text("Add Extinguisher",style: TextStyle(color: Colors.white,fontSize: 19),))
+                  )
+              ),
+              GestureDetector(
+                  onTap: (){
+                    //todo
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=> ADDHB()));
+                  },
+                  child: Container(
+                      width: MediaQuery.of(context).size.width*0.7,
+                      height: MediaQuery.of(context).size.height*0.1,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        color: Colors.blueAccent,
+                      ),
+                      child: Center(child: Text("Add Hose Box",style: TextStyle(color: Colors.white,fontSize: 19),))
+                  )
+              ),
+              GestureDetector(
+                  onTap: (){
+                    //todo
+                  },
+                  child: Container(
+                      width: MediaQuery.of(context).size.width*0.7,
+                      height: MediaQuery.of(context).size.height*0.1,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        color: Colors.blueAccent,
+                      ),
+                      child: Center(child: Text("Add Hose Reel",style: TextStyle(color: Colors.white,fontSize: 19),))
+                  )
+              ),
+            ],
+          ),
+        ),
+      ),
+      );
   }
-}
-
-int giveNoOne([a=1,b=1,c=1,d=1,e=1,f=1,g=1]){
-  if(a==0 || b==0 ||c==0 ||d==0 ||e==0 ||f==0 ||g==0)
-    return 0;
-  else
-    return 1;
 }
 
 setview(data){
@@ -69,12 +112,16 @@ setview(data){
     case "extinguisher":
       return ViewElementEXTINGUISHER(data: data,);
       break;
-    case "hosereel":
-      return ViewElementHOSEREEL(data: data,);
-      break;
     default:
       return Container(child: Text("hello"),);
   }
+}
+
+int giveNoOne([a=1,b=1,c=1,d=1,e=1,f=1,g=1]){
+  if(a==0 || b==0 ||c==0 ||d==0 ||e==0 ||f==0 ||g==0)
+    return 0;
+  else
+    return 1;
 }
 
 class ViewElementHOSEBOX extends StatelessWidget {
@@ -228,91 +275,6 @@ class ViewElementEXTINGUISHER extends StatelessWidget {
                       ),
                       ),
                       Text("${data['Remark']}",style: TextStyle(
-                          fontSize: 24,fontWeight: FontWeight.bold
-                      ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class ViewElementHOSEREEL extends StatelessWidget {
-  final data;
-
-  //`HRID``TYPEOFMACHINE``MachineTagNo``MachineName``Location````````````````LastMaintenanceDate``MaintenanceDoneBy``InspectionDate``InspectionFrequency``InspectionDoneBy``Remarks` `incidentreport`.`tbl_hosereel`
-
-  const ViewElementHOSEREEL({Key key, this.data}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8,left: 10,right: 10,bottom: 8),
-      child: GestureDetector(
-        onTap: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context)=> HRView(data: data,)));
-        },
-        child: Container(
-          width: MediaQuery.of(context).size.width*0.95,
-          height: MediaQuery.of(context).size.height*0.3,
-          decoration: BoxDecoration(
-              color: giveNoOne(data["IdentifiedProperly"],  data["NoObstruction"],  data["NoCorrosionObserved"],  data["ValveProperFunction"],  data["NoLeakageFromLine"], data["NoDirtyWaterDischarge"],  data["HoseReelMountedProper"])==1 ? Colors.green.withOpacity(0.55) : Colors.redAccent.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(30)
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 16.0,top: 6),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text("Category : ",style: TextStyle(
-                      fontSize: 20,
-                    ),
-                    ),
-                    Text("Hose Reel",style: TextStyle(
-                        fontSize: 24,fontWeight: FontWeight.bold
-                    ),),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text("Tag No: ",style: TextStyle(
-                      fontSize: 20,
-                    ),
-                    ),
-                    Text("${data['MachineTagNo']}",style: TextStyle(
-                        fontSize: 24,fontWeight: FontWeight.bold
-                    ),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text("Location : ",style: TextStyle(
-                      fontSize: 20,
-                    ),
-                    ),
-                    Text("${data['Location']}",style: TextStyle(
-                        fontSize: 24,fontWeight: FontWeight.bold
-                    ),
-                    ),
-                  ],
-                ),
-                FittedBox(
-                  child: Row(
-                    children: [
-                      Text("Remark :",style: TextStyle(
-                        fontSize: 20,
-                      ),
-                      ),
-                      Text("${data['Remarks']}",style: TextStyle(
                           fontSize: 24,fontWeight: FontWeight.bold
                       ),
                       ),

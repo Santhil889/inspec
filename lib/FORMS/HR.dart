@@ -1,18 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:inspec_xtra/logic/database/mysql.dart';
+import 'package:inspec_xtra/view.dart';
 
 class HRView extends StatefulWidget {
+  final data;
+
+  const HRView({Key key, this.data}) : super(key: key);
   @override
   _HRViewState createState() => _HRViewState();
 }
 
 class _HRViewState extends State<HRView> {
+  bool _autovalidate=false;
+  final formkey=GlobalKey<FormState>();
   TextEditingController remarks = new TextEditingController();
   // ignore: non_constant_identifier_names
   bool IdentifiedProperly_Signage=false,EasyAccess_NoObstruction=false,	NoCorrosionObserved=false,	ProperFunctioningofValve=false,	NoLeakageFromTheLine=false,	NoDirtyWaterDischarge=false,HoseReelMountedProperly=false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    setbool();
+  }
+
+  setbool(){
+    setState(() {
+      IdentifiedProperly_Signage=widget.data["IdentifiedProperly"] == 1 ? true : false;
+      EasyAccess_NoObstruction=widget.data["NoObstruction"] == 1 ? true : false;
+      NoCorrosionObserved=widget.data["NoCorrosionObserved"] == 1 ? true : false;
+      ProperFunctioningofValve=widget.data["ValveProperFunction"] == 1 ? true : false;
+      NoLeakageFromTheLine=widget.data["NoLeakageFromLine"] == 1 ? true : false;
+      NoDirtyWaterDischarge=widget.data["NoDirtyWaterDischarge"] == 1 ? true : false;
+      HoseReelMountedProperly=widget.data["HoseReelMountedProper"] == 1 ? true : false;
+    });
+  }
+
+  var db= new MySQL();
+
+  updateval(){
+    db.getConnection().then((conn){
+      String sql="UPDATE `incidentreport`.`tbl_hosereel` SET `IdentifiedProperly`='${IdentifiedProperly_Signage ? 1: 0}', `NoObstruction`='${EasyAccess_NoObstruction ? 1: 0}', `NoCorrosionObserved`='${NoCorrosionObserved ? 1: 0}', `ValveProperFunction`='${ProperFunctioningofValve ? 1: 0}', `NoLeakageFromLine`='${NoLeakageFromTheLine ? 1: 0}', `NoDirtyWaterDischarge`='${NoDirtyWaterDischarge ? 1: 0}', `HoseReelMountedProper`='${HoseReelMountedProperly ? 1: 0}', `Remarks`='${remarks.text}' WHERE  `HRID`=${widget.data["HRID"]}";
+      conn.query(sql).then((result){
+        print(result);
+      });
+    });
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> ViewData()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Hose Reel : HR-01"),),
+      appBar: AppBar(title: Text("Hose Reel : ${widget.data["MachineTagNo"]}"),),
       body: ListView(
         children: [
           Padding(
@@ -23,7 +62,7 @@ class _HRViewState extends State<HRView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("HR-01",style: TextStyle(
+                Text("${widget.data["MachineTagNo"]}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
@@ -38,7 +77,7 @@ class _HRViewState extends State<HRView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("Main Enterance Gate",style: TextStyle(
+                Text("${widget.data["Location"]}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
@@ -55,41 +94,45 @@ class _HRViewState extends State<HRView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("2/1/2020",style: TextStyle(
+                Text("${widget.data["LastMaintenanceDate"].toString().substring(0,10)}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Text("Maintenance Done By : ",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("Suraj",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),
-                ),
-              ],
+          FittedBox(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Text("Maintenance Done By : ",style: TextStyle(
+                    fontSize: 20,
+                  ),
+                  ),
+                  Text("${widget.data["MaintenanceDoneBy"]}",style: TextStyle(
+                      fontSize: 24,fontWeight: FontWeight.bold
+                  ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Text("Previous Remark :",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("All ok",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),
-                ),
-              ],
+          FittedBox(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Text("Previous Remark :",style: TextStyle(
+                    fontSize: 20,
+                  ),
+                  ),
+                  Text("${widget.data["Remarks"]}",style: TextStyle(
+                      fontSize: 24,fontWeight: FontWeight.bold
+                  ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -241,16 +284,23 @@ class _HRViewState extends State<HRView> {
           ),
 
 
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextFormField(
-              controller: remarks,
-              decoration: new InputDecoration(
-                border: new OutlineInputBorder(
-                    borderSide: new BorderSide(color: Colors.teal)
+          Form(
+            key: formkey,
+            autovalidate: _autovalidate,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextFormField(
+                controller: remarks,
+                validator: (value){
+                  return value.length>6 ? null : "Please Enter Proper Remark";
+                },
+                decoration: new InputDecoration(
+                  border: new OutlineInputBorder(
+                      borderSide: new BorderSide(color: Colors.teal)
+                  ),
+                  hintText: 'Any Remarks??',
+                  labelText: 'Remarks',
                 ),
-                hintText: 'Any Remarks??',
-                labelText: 'Remarks',
               ),
             ),
           ),
@@ -258,7 +308,12 @@ class _HRViewState extends State<HRView> {
             padding: const EdgeInsets.symmetric(vertical:8.0, horizontal: 16),
             child: GestureDetector(
                 onTap: (){
-                  //TODO: Sumbit Form
+                  if(formkey.currentState.validate())
+                    updateval();
+                  else
+                    setState(() {
+                      _autovalidate=true;
+                    });
                 },
                 child: Container(
                     width: MediaQuery.of(context).size.width*0.5,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inspec_xtra/admin.dart';
 import 'package:inspec_xtra/view.dart';
 
 // ignore: camel_case_types
@@ -66,7 +67,7 @@ class _loggedinState extends State<loggedin> {
               ),
               GestureDetector(
                   onTap: (){
-
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=> adminview()));
                   },
                   child: Container(
                       width: MediaQuery.of(context).size.width*0.7,

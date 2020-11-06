@@ -1,18 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:inspec_xtra/logic/database/mysql.dart';
+import 'package:inspec_xtra/view.dart';
 
 class ExtView extends StatefulWidget {
+  final data;
+
+  const ExtView({Key key, this.data}) : super(key: key);
   @override
   _ExtViewState createState() => _ExtViewState();
 }
 
 class _ExtViewState extends State<ExtView> {
+
+  bool _autovalidate=false;
+  final formkey=GlobalKey<FormState>();
   TextEditingController remarks = new TextEditingController();
   // ignore: non_constant_identifier_names
   bool Inspection_Tag_Check=false;
+
+  setbool(){
+    setState(() {
+      Inspection_Tag_Check=widget.data["InspectionTagCheck"]==1 ? true : false;
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    print("${widget.data["extinghuisherId"]}");
+    setbool();
+  }
+
+  var db= new MySQL();
+
+  updateval(){
+    db.getConnection().then((conn){
+      String sql="UPDATE `incidentreport`.`tbl_fireextinguisher` SET `InspectionTagCheck`='${Inspection_Tag_Check ? 1 : 0}', `Remark`='${remarks.text}' WHERE  `extinghuisherId`=${widget.data["extinghuisherId"]}";
+      conn.query(sql).then((result){
+        print(result);
+      });
+    });
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> ViewData()));
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Extinguisher : EXT-01"),),
+      appBar: AppBar(title: Text("Extinguisher : ${widget.data["TagNo"]}"),),
       body: ListView(
         children: [
 
@@ -24,7 +60,7 @@ class _ExtViewState extends State<ExtView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("EXT-01",style: TextStyle(
+                Text("${widget.data["TagNo"]}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
@@ -39,7 +75,7 @@ class _ExtViewState extends State<ExtView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("SW Gate of Ware House",style: TextStyle(
+                Text("${widget.data["Location"]}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
@@ -69,7 +105,7 @@ class _ExtViewState extends State<ExtView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("5 Kg",style: TextStyle(
+                Text("${widget.data["capacity"]}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
@@ -84,7 +120,7 @@ class _ExtViewState extends State<ExtView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("3/01/2019",style: TextStyle(
+                Text("${widget.data["manufactureDate"].toString().substring(0,10)}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
@@ -99,7 +135,7 @@ class _ExtViewState extends State<ExtView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("3/01/2024",style: TextStyle(
+                Text("${widget.data["RefillDueDate"].toString().substring(0,10)}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
@@ -114,41 +150,45 @@ class _ExtViewState extends State<ExtView> {
                   fontSize: 20,
                 ),
                 ),
-                Text("1/05/2020",style: TextStyle(
+                Text("${widget.data["lastMaintenanceDate"].toString().substring(0,10)}",style: TextStyle(
                     fontSize: 24,fontWeight: FontWeight.bold
                 ),
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Text("Maintenance Done By : ",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("Pawan Pawan",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),
-                ),
-              ],
+          FittedBox(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Text("Maintenance Done By : ",style: TextStyle(
+                    fontSize: 20,
+                  ),
+                  ),
+                  Text("${widget.data["MaintenanceDoneBy"]}",style: TextStyle(
+                      fontSize: 24,fontWeight: FontWeight.bold
+                  ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Text("Previous Remark :",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("Everything is ok",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),
-                ),
-              ],
+          FittedBox(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Text("Previous Remark :",style: TextStyle(
+                    fontSize: 20,
+                  ),
+                  ),
+                  Text("${widget.data["Remark"]}",style: TextStyle(
+                      fontSize: 24,fontWeight: FontWeight.bold
+                  ),
+                  ),
+                ],
+              ),
             ),
           ),
           Padding(
@@ -172,24 +212,37 @@ class _ExtViewState extends State<ExtView> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextFormField(
-              controller: remarks,
-              decoration: new InputDecoration(
-                border: new OutlineInputBorder(
-                    borderSide: new BorderSide(color: Colors.teal)
+          Form(
+            key: formkey,
+            autovalidate: _autovalidate,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextFormField(
+                controller: remarks,
+                validator: (value){
+                  return value.length>6 ? null : "Please Enter Proper Remark";
+                },
+                decoration: new InputDecoration(
+                  border: new OutlineInputBorder(
+                      borderSide: new BorderSide(color: Colors.teal)
+                  ),
+                  hintText: 'Any Remarks??',
+                  labelText: 'Remarks',
                 ),
-                hintText: 'Any Remarks??',
-                labelText: 'Remarks',
               ),
             ),
           ),
+
           Padding(
             padding: const EdgeInsets.symmetric(vertical:8.0, horizontal: 16),
             child: GestureDetector(
                 onTap: (){
-                  //TODO: Sumbit Form
+                  if(formkey.currentState.validate())
+                    updateval();
+                  else
+                    setState(() {
+                      _autovalidate=true;
+                    });
                 },
                 child: Container(
                     width: MediaQuery.of(context).size.width*0.5,
@@ -207,79 +260,3 @@ class _ExtViewState extends State<ExtView> {
     );
   }
 }
-
-
-/*
-
-5 kg	3/1/2019	3/1/2024
-
-*body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(),
-            Row(
-              children: [
-                Text("Type : ",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("Extinguisher",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),),
-              ],
-            ),
-            Row(
-              children: [
-                Text("Tag No: ",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("EXT-01",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Text("Location : ",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("SW Gate of Ware House",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Text("Type : ",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("Wet Chemical",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Text("Remark :",style: TextStyle(
-                  fontSize: 20,
-                ),
-                ),
-                Text("Everything is ok",style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.bold
-                ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-
-*/
